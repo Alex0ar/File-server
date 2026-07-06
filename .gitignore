@@ -1,0 +1,32 @@
+# Gradle build output and local cache
+.gradle/
+build/
+**/build/
+
+# Compiled Java output
+*.class
+out/
+
+# IntelliJ IDEA local workspace files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Keep Gradle wrapper files tracked
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Logs
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+*.yaml
+**/*.yaml
+**/task.html
