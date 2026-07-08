@@ -36,20 +36,28 @@ public class Main {
             String request = null;
             switch (action) {
                 case "1" -> {
-                    String fileToDownload = null;
                     System.out.print("Do you want to get the file by name or by id (1 - name, 2 - id): ");
+
+                    // message to server structure: "GET" | "N" (if BY_NAME) | name length | name
+                    //                           OR "GET" | "I" (if BY_ID) | id
+                    out.writeUTF("GET");
                     switch (userInput.nextLine()) {
                         case "1" -> {
                             System.out.print("Enter name: ");
-                            fileToDownload = userInput.nextLine();
+                            String name = userInput.nextLine();
+                            out.writeUTF("N");
+                            out.writeInt(name.length());
+                            out.writeUTF(name);
                         }
                         case "2" -> {
                             System.out.print("Enter id: ");
-                            fileToDownload = userInput.nextLine();
+                            int id = userInput.nextInt();
+                            userInput.nextLine();
+                            out.writeUTF("I");
+                            out.writeInt(id);
                         }
                     }
-                    request = "GET " + fileToDownload;
-                    out.writeUTF(request);
+
                     System.out.println("The request was sent.");
 
                     // response from server structure: STATUS_CODE | FILE_LENGTH | FILE IN BYTES
@@ -73,10 +81,52 @@ public class Main {
                     String fileNameToSend = userInput.nextLine();
                     System.out.print("Enter name of the file to be saved on server: ");
                     String fileNameToSave = userInput.nextLine();
-
+                    if (!Files.exists(DATA_DIRECTORY.resolve(fileNameToSend))) {
+                        System.out.println("The file doesn't exist!");
+                        return;
+                    }
+                    byte[] fileContent = Files.readAllBytes(DATA_DIRECTORY.resolve(fileNameToSend));
+                    out.writeUTF("PUT");
+                    out.writeInt(fileNameToSave.length());
+                    out.writeUTF(fileNameToSend);
+                    out.writeInt(fileContent.length);
+                    out.write(fileContent);
+                    System.out.println("The request was sent.");
+                    int STATUS_CODE = in.readInt();
+                    if (STATUS_CODE == 200) {
+                        int fileId = in.readInt();
+                        System.out.println("Response says that file is saved! ID = " + fileId);
+                    } else {
+                        System.out.println("The response says that creating the file was forbidden!");
+                    }
                 }
                 case "3" -> {
+                    System.out.print("Do you want to delete the file by name or by id (1 - name, 2 - id):");
+                    out.writeUTF("DELETE");
+                    switch (userInput.nextLine()) {
+                        case "1" -> {
+                            System.out.print("Enter name: ");
+                            String name = userInput.nextLine();
+                            out.writeUTF("N");
+                            out.writeInt(name.length());
+                            out.writeUTF(name);
+                        }
+                        case "2" -> {
+                            System.out.print("Enter id: ");
+                            int id = userInput.nextInt();
+                            userInput.nextLine();
+                            out.writeUTF("I");
+                            out.writeInt(id);
+                        }
+                    }
+                    System.out.println("The request was sent.");
 
+                    int STATUS_CODE = in.readInt();
+                    if (STATUS_CODE == 200) {
+                        System.out.println("The response says that this file was deleted successfully!");
+                    } else {
+                        System.out.println("The response says that this file is not found!");
+                    }
                 }
             }
 
