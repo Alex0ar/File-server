@@ -2,6 +2,7 @@ package client;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.StandardSocketOptions;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,7 +12,10 @@ import java.util.Scanner;
 public class Main {
     private static final String address = "127.0.0.1";
     private static final int port = 23456;
-    private static final Path DATA_DIRECTORY = Paths.get(System.getProperty("user.dir"), "File Server", "task", "src", "client", "data");
+    //private static final Path DATA_DIRECTORY = Paths.get(System.getProperty("user.dir"), "File Server", "task", "src", "client", "data");
+    //For Hyperskill
+    private static final Path DATA_DIRECTORY = Paths.get("src", "client", "data");
+
 
 //    private enum FileSelectionMethod {
 //        BY_ID,
@@ -35,7 +39,7 @@ public class Main {
 
             String request = null;
             switch (action) {
-                case "1" -> {
+                case "1" -> { //GET
                     System.out.print("Do you want to get the file by name or by id (1 - name, 2 - id): ");
 
                     // message to server structure: "GET" | "N" (if BY_NAME) | name length | name
@@ -45,16 +49,14 @@ public class Main {
                         case "1" -> {
                             System.out.print("Enter name: ");
                             String name = userInput.nextLine();
-                            out.writeUTF("N");
-                            out.writeInt(name.length());
+                            out.writeUTF("BY_NAME");
                             out.writeUTF(name);
                         }
                         case "2" -> {
                             System.out.print("Enter id: ");
-                            int id = userInput.nextInt();
-                            userInput.nextLine();
-                            out.writeUTF("I");
-                            out.writeInt(id);
+                            long id = Long.parseLong(userInput.nextLine());
+                            out.writeUTF("BY_ID");
+                            out.writeLong(id);
                         }
                     }
 
@@ -63,6 +65,7 @@ public class Main {
                     // response from server structure: STATUS_CODE | FILE_LENGTH | FILE IN BYTES
 
                     int STATUS_CODE = in.readInt();
+                    System.out.println(STATUS_CODE);
                     if  (STATUS_CODE == 200) {
                         int fileContentLength = in.readInt();
                         byte[] fileContent = new byte[fileContentLength];
@@ -72,11 +75,11 @@ public class Main {
                         Files.write(DATA_DIRECTORY.resolve(fileNameToCreate),  fileContent);
                         System.out.println("File saved on the hard drive!");
                     } else {
-                        System.out.println("The response says that the file was not found!");
+                        System.out.println("The response says that this file is not found!");
                     }
 
                 }
-                case "2" -> {
+                case "2" -> { //PUT
                     System.out.print("Enter name of the file: ");
                     String fileNameToSend = userInput.nextLine();
                     System.out.print("Enter name of the file to be saved on server: ");
@@ -87,36 +90,39 @@ public class Main {
                     }
                     byte[] fileContent = Files.readAllBytes(DATA_DIRECTORY.resolve(fileNameToSend));
                     out.writeUTF("PUT");
-                    out.writeInt(fileNameToSave.length());
                     out.writeUTF(fileNameToSend);
+                    if (fileNameToSave.length() > 0) {
+                        out.writeInt(1);
+                        out.writeUTF(fileNameToSave);
+                    } else {
+                        out.writeInt(0);
+                    }
                     out.writeInt(fileContent.length);
                     out.write(fileContent);
                     System.out.println("The request was sent.");
                     int STATUS_CODE = in.readInt();
                     if (STATUS_CODE == 200) {
-                        int fileId = in.readInt();
+                        long fileId = in.readLong();
                         System.out.println("Response says that file is saved! ID = " + fileId);
                     } else {
                         System.out.println("The response says that creating the file was forbidden!");
                     }
                 }
-                case "3" -> {
+                case "3" -> { //DELETE
                     System.out.print("Do you want to delete the file by name or by id (1 - name, 2 - id):");
                     out.writeUTF("DELETE");
                     switch (userInput.nextLine()) {
                         case "1" -> {
                             System.out.print("Enter name: ");
                             String name = userInput.nextLine();
-                            out.writeUTF("N");
-                            out.writeInt(name.length());
+                            out.writeUTF("BY_NAME");
                             out.writeUTF(name);
                         }
                         case "2" -> {
                             System.out.print("Enter id: ");
-                            int id = userInput.nextInt();
-                            userInput.nextLine();
-                            out.writeUTF("I");
-                            out.writeInt(id);
+                            long id = Long.parseLong(userInput.nextLine());
+                            out.writeUTF("BY_ID");
+                            out.writeLong(id);
                         }
                     }
                     System.out.println("The request was sent.");
@@ -129,33 +135,6 @@ public class Main {
                     }
                 }
             }
-
-//            String response = in.readLine();
-//            System.out.println("[client] response from server: " + response);
-//            switch (action) {
-//                case "1" -> {
-//                    String[] responseArray = response.split(" ", 2);
-//                    if (responseArray[0].equals("200")) {
-//                        System.out.println("The content of the file is: " + responseArray[1]);
-//                    } else {
-//                        System.out.println("The response says that the file was not found!");
-//                    }
-//                }
-//                case "2" -> {
-//                    if (response.equals("200")) {
-//                        System.out.println("The response says that the file was created!");
-//                    } else {
-//                        System.out.println("The response says that creating the file was forbidden!");
-//                    }
-//                }
-//                case "3" -> {
-//                    if (response.equals("200")) {
-//                        System.out.println("The response says that the file was successfully deleted!");
-//                    } else {
-//                        System.out.println("The response says that the file was not found!");
-//                    }
-//                }
-//            }
 
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);

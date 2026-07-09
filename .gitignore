@@ -30,3 +30,6 @@ Thumbs.db
 *.yaml
 **/*.yaml
 **/task.html
+
+File\ Server/task/test/*
+
