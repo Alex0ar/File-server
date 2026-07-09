@@ -14,7 +14,8 @@ import java.util.Map;
 
 public class IdMapPersistance {
     private static final Gson gson = new Gson();
-    private static final Path IDENTIFIERS_FILE = Paths.get("File Server", "task", "src", "server", "identifiers.json");
+    //private static final Path IDENTIFIERS_FILE = Paths.get("File Server", "task", "src", "server", "identifiers.json");
+    private static final Path IDENTIFIERS_FILE = Paths.get("src", "server", "identifiers.json");
 
     public static void saveMap(Map<Long, String> map) {
         String json = gson.toJson(map);
